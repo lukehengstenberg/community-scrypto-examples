@@ -1,0 +1,21 @@
+# Locking fee to pay for transaction
+CALL_METHOD
+    # faucet component (only component address on ledger at this stage)
+    Address("<component_address>")
+    "lock_fee"
+    Decimal("100");
+
+# Instantiate the ProposalVoting component with 100 votes per voter
+CALL_FUNCTION
+    # ProposalVoting package address (bottom one on Packages list)
+    Address("<proposalvoting_package_address>")
+    "ProposalVoting"
+    "instantiate_proposal_voting"
+    100u16;
+    
+# Depositing everything from worktop into the account
+CALL_METHOD
+    # default account address
+    Address("<chairperson_account_address>")
+    "deposit_batch"
+    Expression("ENTIRE_WORKTOP");
