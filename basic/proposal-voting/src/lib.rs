@@ -65,7 +65,7 @@ mod proposal_voting_module {
         /// caller as the "Chair Person" via a Chairperson Badge which is minted
         /// and returned.
         /// Being the ChairPerson means access to authenticated methods for adding 
-        /// new proposals giving people the right to vote, and calculating the 
+        /// new proposals, giving people the right to vote, and calculating the 
         /// winning proposals.
         /// (see manifest in transactions/create_component.rtm)
         /// 
@@ -280,7 +280,7 @@ mod proposal_voting_module {
         /// Votes on a given proposal.
         /// 
         /// This method is used to submit votes for a particular proposal. 
-        /// It requires a voter badge to be passed in and performs 
+        /// It requires proof of a voter badge to be passed in and performs 
         /// several validation checks, before adding votes to the proposal NFT
         /// and removing votes from the voter NFT.
         /// (see manifest in transactions/cast_vote.rtm)
@@ -295,20 +295,15 @@ mod proposal_voting_module {
         /// 
         /// # Arguments:
         /// 
-        /// * `voter_badge` (Bucket) - Bucket containing the voter NFT for auth and vote counting. 
-        /// Note: I may see about switching the voter_badge to a Proof in the coming days..
+        /// * `voter_badge` (Proof) - Proof containing the voter NFT for auth and vote counting. 
         /// * `chosen_proposal_id` (NonFungibleLocalId) - Id of the proposal to vote on.
         /// * `number_of_votes` (u16) - Number of votes to cast.
-        /// 
-        /// # Returns:
-        /// 
-        /// * `Bucket` - The updated voter badge NFT.
         pub fn vote(
             &mut self,
-            voter_badge: Bucket,
+            voter_badge: Proof,
             chosen_proposal_id: NonFungibleLocalId,
             number_of_votes: u16,
-        ) -> Bucket {
+        ) {
 
             info!("Attempting to submit {} votes for proposal {}", number_of_votes, chosen_proposal_id);
 
@@ -318,18 +313,19 @@ mod proposal_voting_module {
                 "[Vote]: Voting has closed"
             );
             // Check that the type and quantity of the badge in the proof is correct.
-            assert_eq!(
-                voter_badge.resource_address(),
-                self.voter_resource_address,
-                "[Vote]: Invalid voter badge type presented"
-            );
-            assert!(
-                voter_badge.amount() == dec!("1"),
-                "[Vote]: Invalid voter badge amount presented ({})", voter_badge.amount()
-            );
+            let voter_badge: ValidatedProof = voter_badge
+                .validate_proof(ProofValidationMode::ValidateContainsAmount(
+                    self.voter_resource_address,
+                    dec!("1"),
+                ))
+                .expect("[Vote]: Invalid voter badge type or amount present");
 
-            // Retrieve the voter data for the given voter_id.
-            let mut voter_data: Voter = voter_badge.non_fungible().data();
+            // We have now verified that the caller has presented a valid voter 
+            // badge and can extract and update the data.
+            let voter_nft: NonFungible<Voter> = voter_badge.non_fungible::<Voter>();
+            
+            // Retrieve the voter data for the given voter badge.
+            let mut voter_data: Voter = voter_nft.data();
             // Check that the voter has sufficient votes left.
             assert!(
                 voter_data.remaining_votes >= number_of_votes,
@@ -355,26 +351,24 @@ mod proposal_voting_module {
                 self.proposals.non_fungible_local_ids().contains(&chosen_proposal_id),
                 "[Vote]: Proposal id not recognised"
             );
-            // Retrieve the given proposal NFT from the vault into a new bucket.
-            let proposal_bucket = self.proposals.take_non_fungible(&chosen_proposal_id);
-            // Retrieve the proposal data for the given proposal.
-            let mut proposal_data: Proposal = proposal_bucket.non_fungible().data();
 
-            // Add votes to the proposal NFT
-            proposal_data.votes += number_of_votes;
+            // Update the proposal.
             self.internal_chairperson_badge.authorize(|| {
-                // Update the proposal NFT.
-                borrow_resource_manager!(self.proposal_resource_address)
-                    .update_non_fungible_data(&chosen_proposal_id, "votes", proposal_data.votes);
-                // Re-add to the proposals vault.
-                self.proposals.put(proposal_bucket);
+                // Retrieve ResourceManager for the proposal NFT resource.
+                let mut proposal_resource_manager: ResourceManager =
+                    borrow_resource_manager!(self.proposal_resource_address);
+                // Retrieve data for the chosen proposal id.
+                let mut proposal: Proposal = 
+                    proposal_resource_manager.get_non_fungible_data(&chosen_proposal_id);
+                // Increment the number of votes by those cast.
+                proposal.votes += number_of_votes;
+                // Update the proposal NFT. 
+                proposal_resource_manager.update_non_fungible_data(&chosen_proposal_id, 
+                    "votes", proposal.votes);
             });
 
             // Increment the total votes.
             self.total_votes += number_of_votes;
-
-            // Return the voter badge with the updated remaining votes.
-            return voter_badge;
         }
 
         /// Calculates the winning and losing proposals.
@@ -388,45 +382,49 @@ mod proposal_voting_module {
         /// proposal was added.
         /// (see manifest in transactions/calculate_winning_proposals.rtm)
         /// 
+        /// # Validation Checks:
+        /// 
+        /// * **Check 1:** Checks that at least one vote has been cast.
+        /// 
         /// The authorization check is handled on the component level. 
         pub fn winning_proposals(
             &mut self,
         ) {
             info!("Calculating winning proposals and closing voting...");
 
-            // Loop through all proposals to retrieve the corresponding NFT.
-            for proposal in self.proposals.non_fungibles() {
-                // Extract proposal data.
-                let mut proposal_data: Proposal = proposal.data();
-                // Calculate the percentage of votes received.
-                let percentage_votes_received = (proposal_data.votes
-                    .checked_mul(100).unwrap())
-                    / self.total_votes;
-                // Check if the proposal has won.
-                if percentage_votes_received >= proposal_data.threshold.into() {
-                    info!("Proposal {} won, receiving {}% of the votes, which 
-                    exceeded the minimum threshold of {}%", proposal_data.name, 
-                    percentage_votes_received, proposal_data.threshold);
+            // Check that at least one vote has been cast.
+            assert!(
+                self.total_votes > 0,
+                "[Calculating_Winner]: No votes have been cast"
+            );
 
-                    // Update the proposal data to won.
-                    proposal_data.won = true;
-                    // Update the actual NFT.
-                    self.internal_chairperson_badge.authorize(|| {
-                        // Retrieve the given proposal NFT from the vault into a new bucket.
-                        let proposal_bucket = self.proposals
-                            .take_non_fungible(proposal.local_id());
-                        // Update the proposal bucket.
-                        borrow_resource_manager!(self.proposal_resource_address)
-                            .update_non_fungible_data(proposal.local_id(), "won", true);
-                        // Re-add to the proposals vault.
-                        self.proposals.put(proposal_bucket);
-                    });
-                } else {
-                    info!("Proposal {} lost, receiving {}% of the votes, which 
-                        did not satisfy the minimum threshold of {}%", proposal_data.name,
-                        percentage_votes_received, proposal_data.threshold);
+            self.internal_chairperson_badge.authorize(|| {
+                // Obtain instance of proposal resource manager.
+                let mut proposal_resource_manager: ResourceManager =
+                    borrow_resource_manager!(self.proposal_resource_address);
+                // Loop through all proposal ids to retrieve the corresponding NFT.
+                for proposal_id in self.proposals.non_fungible_local_ids() {
+                    // Extract proposal data.
+                    let proposal_data: Proposal = 
+                        proposal_resource_manager.get_non_fungible_data(&proposal_id);
+                    // Calculate the percentage of votes received and round to the nearest integer.
+                    let percentage_votes_received = 
+                        ((proposal_data.votes as f64 * 100.0) / self.total_votes as f64).round() as u8;
+                    // Check if the proposal has won.
+                    if percentage_votes_received >= proposal_data.threshold {
+                        info!("Proposal {} won, receiving {}% of the votes, which 
+                            exceeded the minimum threshold of {}%", proposal_data.name, 
+                            percentage_votes_received, proposal_data.threshold);
+                        // Update the proposal NFT to won = true. 
+                        proposal_resource_manager.update_non_fungible_data(&proposal_id, 
+                            "won", true);
+                    } else {
+                        info!("Proposal {} lost, receiving {}% of the votes, which 
+                            did not satisfy the minimum threshold of {}%", proposal_data.name,
+                            percentage_votes_received, proposal_data.threshold)
+                    }
                 }
-            }
+            });
 
             // Close the voting.
             self.is_closed = true;
@@ -464,12 +462,13 @@ mod proposal_voting_module {
                 "[Vote]: Proposal id not recognised"
             );
 
-            // Retrieve the given proposal NFT from the vault into a new bucket.
-            let proposal_bucket = self.proposals
-                .take_non_fungible(&chosen_proposal_id);
-            // Retrieve the proposal data for the given proposal.
-            let proposal_data: Proposal = proposal_bucket.non_fungible().data();
-            // Log the result.
+            // Obtain instance of proposal resource manager.
+            let proposal_resource_manager: ResourceManager =
+                borrow_resource_manager!(self.proposal_resource_address);
+            // Extract proposal data.
+            let proposal_data: Proposal = 
+                proposal_resource_manager.get_non_fungible_data(&chosen_proposal_id);
+            // Check and print result.
             if proposal_data.won {
                 info!("Proposal {} was successful, exceeding its minimum voting 
                     threshold of {}%", proposal_data.name, proposal_data.threshold);
@@ -477,8 +476,6 @@ mod proposal_voting_module {
                 info!("Proposal {} was not successful, failing to meet its 
                     minimum threshold of {}%", proposal_data.name, proposal_data.threshold);
             }
-            // Re-add to the proposals vault.
-            self.proposals.put(proposal_bucket);
         }
     }
 }
