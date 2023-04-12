@@ -1,25 +1,21 @@
-## ProposalVoting
-This Scrypto blueprint was created as a means for fairly settling votes on multiple proposals.
-This is beneficial for situations where there is only enough funding for a select few proposals so the most popular should be chosen. 
-I will be updating this README with some more info tomorrow, for now there should be plenty of detail in my code comments! 
+# ProposalVoting
+This Scrypto blueprint was created as a means for fairly settling votes on proposals.
+This is beneficial for situations where there is only enough funding for a select few proposals so the most popular should be chosen.
 
-# Todo
-1. Add automated tests for complete code coverage in tests/lib.rs.
-2. Some code refactoring and cleanup.
-3. Expand ./build_rtm.sh and add additional automated scripts for easier setup and usage.
-4. Implement extra methods for viewing all results, removing voters and proposals, other useful features.
-5. Finish off this README! 
+For example, say a government department only has enough funding for a new playground, a waterslide, and a car park. Using the ProposalVoting component, each of these could be launched as its own proposal NFT with percentage thresholds for success. The chairperson(s) could then mint voter badges, each containing a set number of votes, and distribute them to the other committee members. Each committee member can now use their voter badge to allocate their votes to the proposal(s) they think are most important. Every time they cast a vote, the balance of the proposal NFT increases and the balance of their voter badge decreases until they are out of votes. Finally, the chairperson(s) can decide to close voting, calculating the winning proposals based on whether the percentage of votes received has exceeded the minimum percentage threshold, and updating the proposal NFT to reflect the result. 
+The government department now has non-fungible evidence to back their decision to get a new slide or swing!
 
-# Features
-Coming soon...
+## Features
+The `ProposalVoting` blueprint comes with a number of features, including:
+1. Ability to launch the contract with protection over who can add proposals, add voters, and calculate results. 
+2. Ability to allow multiple parties to access authorized methods through support for custom access rules. 
+3. Restrictions on voting to only parties that can show proof of a voter badge, validation checks to ensure voting only happens before it is closed.
+4. Methods for adding new proposals, voters, voting, and calculating/displaying results. 
 
-# Design Details
-Coming soon...
-
-# Steps
+## Steps
 Here are the current steps for instantiating and interacting with the `ProposalVoting` blueprint via several transaction manifests.
 Currently they require a lot of manual editing to access the correct resources. 
-I am planning to add more automation to make life easier when I have time later this week.
+I am planning to add more automation to make life easier when I have time.
 
 1. Run `./build_rtm.sh`, jot down the addresses, private keys, and owner badges as you will need these later to switch accounts.
 2. Update values in `create_component.rtm` to match the component address of the faucet, newly added package, and default account address (see comments for locations).
@@ -37,5 +33,16 @@ I am planning to add more automation to make life easier when I have time later 
 14. Update values in `view_results.rtm` to match the chairperson account, proposal voting component address, and the desired proposal to check.
 15. Execute `resim run transactions/view_results.rtm` to view the result of the given proposal.
 
-# Future work and improvements
-Coming soon...
+## Future work and improvements
+There are several improvements that could be made, here are some suggestions of features that may be added:
+- [] Automated Tests for all methods including edge-cases. 
+- [] Better setup/execution automated scripts that can auto-populate addresses in transaction manifests. 
+- [] Ability to set a time-limit for how long voting is open, and automatically closing and calculating results when elapsed.
+- [] Bulk minting voter badges for better efficiency in situations where we need lots of participation. 
+- [] Bulk minting proposals, again for better efficiency. 
+- [] Methods for chairperson to remove/recall proposals and voters as in reality proposals/voters could be dropped.
+- [] Method for bulk printing/viewing results. 
+- [] User interface which makes use of transaction manifests to interact with the `ProposalVoting` component.
+- [] More proposal metadata e.g. detailed description of what the proposal is. 
+- [] Additional transaction manifests for simulating extra scenarios like instantiation with custom access rules.
+
