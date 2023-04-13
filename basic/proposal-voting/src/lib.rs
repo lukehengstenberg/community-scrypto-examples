@@ -409,9 +409,11 @@ mod proposal_voting_module {
                         proposal_resource_manager.get_non_fungible_data(&proposal_id);
                     // Calculate the percentage of votes received and round to the nearest integer.
                     let percentage_votes_received = 
-                        ((proposal_data.votes as f64 * 100.0) / self.total_votes as f64).round() as u8;
+                        ((PreciseDecimal::from(proposal_data.votes * 100)) 
+                        / PreciseDecimal::from(self.total_votes))
+                        .round(0, RoundingMode::TowardsNearestAndHalfAwayFromZero);
                     // Check if the proposal has won.
-                    if percentage_votes_received >= proposal_data.threshold {
+                    if percentage_votes_received >= proposal_data.threshold.into() {
                         info!("Proposal {} won, receiving {}% of the votes, which 
                             exceeded the minimum threshold of {}%", proposal_data.name, 
                             percentage_votes_received, proposal_data.threshold);
