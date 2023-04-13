@@ -1,6 +1,5 @@
-# This script sets up the environment to the point of the proposal voting component 
-# being launched with three proposals and three voters.
-# It autopopulates missing data into the transaction manifests so they can be run easily.
+# This script both sets up the proposal voting environment and runs all the transaction
+# manifests, simulating a full process from start to finish.
 
 # Getting the current script dir
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -113,19 +112,43 @@ resim run "$SCRIPT_DIR/transactions/add_voters.rtm"
 # Building the cast_vote_voter1.rtm file
 echo "[•] Building the cast_vote_voter1.rtm file"
 sed "$REPLACEMENT_LOOKUP" $SCRIPT_DIR/raw_transactions/cast_vote_voter1.rtm > $SCRIPT_DIR/transactions/cast_vote_voter1.rtm
+# Changing to the voter 1 account
+resim set-default-account $VOTER1_ADDRESS $VOTER1_PRIV_KEY $VOTER1_OWNER_BADGE
+# Running the cast_vote_voter1 manifest
+echo "[•] Casting votes as voter 1 using cast_vote_voter1.rtm"
+resim run "$SCRIPT_DIR/transactions/cast_vote_voter1.rtm"
 
 # Building the cast_vote_voter2.rtm file
 echo "[•] Building the cast_vote_voter2.rtm file"
 sed "$REPLACEMENT_LOOKUP" $SCRIPT_DIR/raw_transactions/cast_vote_voter2.rtm > $SCRIPT_DIR/transactions/cast_vote_voter2.rtm
+# Changing to the voter 2 account
+resim set-default-account $VOTER2_ADDRESS $VOTER2_PRIV_KEY $VOTER2_OWNER_BADGE
+# Running the cast_vote_voter2 manifest
+echo "[•] Casting votes as voter 2 using cast_vote_voter2.rtm"
+resim run "$SCRIPT_DIR/transactions/cast_vote_voter2.rtm"
 
 # Building the cast_vote_voter3.rtm file
 echo "[•] Building the cast_vote_voter3.rtm file"
 sed "$REPLACEMENT_LOOKUP" $SCRIPT_DIR/raw_transactions/cast_vote_voter3.rtm > $SCRIPT_DIR/transactions/cast_vote_voter3.rtm
+# Changing to the voter 3 account
+resim set-default-account $VOTER3_ADDRESS $VOTER3_PRIV_KEY $VOTER3_OWNER_BADGE
+# Running the cast_vote_voter3 manifest
+echo "[•] Casting votes as voter 3 using cast_vote_voter3.rtm"
+resim run "$SCRIPT_DIR/transactions/cast_vote_voter3.rtm"
+
+# Changing account back to the chairperson
+resim set-default-account $CHAIRPERSON_ADDRESS $CHAIRPERSON_PRIV_KEY $CHAIRPERSON_OWNER_BADGE
 
 # Building the calculate_winning_proposals.rtm file
 echo "[•] Building the calculate_winning_proposals.rtm file"
 sed "$REPLACEMENT_LOOKUP" $SCRIPT_DIR/raw_transactions/calculate_winning_proposals.rtm > $SCRIPT_DIR/transactions/calculate_winning_proposals.rtm
+# Calculating the winning proposals
+echo "[•] Calculating winning proposals using the calculate_winning_proposals.rtm file"
+resim run "$SCRIPT_DIR/transactions/calculate_winning_proposals.rtm"
 
 # Building the view_results.rtm file
 echo "[•] Building the view_results.rtm file"
 sed "$REPLACEMENT_LOOKUP" $SCRIPT_DIR/raw_transactions/view_results.rtm > $SCRIPT_DIR/transactions/view_results.rtm
+# Viewing the results
+echo "[•] Viewing results using the view_results.rtm file"
+resim run "$SCRIPT_DIR/transactions/view_results.rtm"

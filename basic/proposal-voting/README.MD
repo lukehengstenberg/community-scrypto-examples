@@ -13,30 +13,22 @@ The `ProposalVoting` blueprint comes with a number of features, including:
 4. Methods for adding new proposals, voters, voting, and calculating/displaying results. 
 
 ## Steps
-Here are the current steps for instantiating and interacting with the `ProposalVoting` blueprint via several transaction manifests.
-Currently they require a lot of manual editing to access the correct resources. 
-I am planning to add more automation to make life easier when I have time.
+There are two automated scripts available for instantiating and interacting with the `ProposalVoting` blueprint via several manifests:
+- `build_rtm.sh`: This script will launch the blueprint component, adding three proposals and three voters. All the transaction manifests should be auto-populated. The user can then do the following to run through the process:
+1. Run `./build_rtm.sh`, jot down the addresses, private keys, and owner badges towards the top of the console output as you will need these later to switch accounts.
+2. Change to one of the voter accounts so you can cast a vote using `resim set-default-account <COMPONENT_ADDRESS><PRIVATE_KEY><OWNER_BADGE>`.
+3. Execute the corresponding transaction manifest e.g. `resim run transactions/cast_vote_voter1.rtm` if you are set to voter 1. OR add your own parameters into `cast_vote.rtm` and run that.
+4. Repeat steps 2 and 3, switching between accounts/proposals so you have a variety of votes cast.
+5. Switch back to the chairperson account using `resim set-default-account <COMPONENT_ADDRESS><PRIVATE_KEY><OWNER_BADGE>`.
+6. Execute `resim run transactions/calculate_winning_proposals.rtm` to calculate the winning proposals based on the proposals added and votes cast.
+7. Execute `resim run transactions/view_results.rtm` to view the results.
 
-1. Run `./build_rtm.sh`, jot down the addresses, private keys, and owner badges as you will need these later to switch accounts.
-2. Update values in `create_component.rtm` to match the component address of the faucet, newly added package, and default account address (see comments for locations).
-3. Execute `resim run transactions/create_component.rtm` to instantiate the `ProposalVoting` component.
-4. Update values in `add_proposals.rtm` to match the default account address and the newly created component address (see comments for locations).
-5. Execute `resim run transactions/add_proposals.rtm` to add three new proposals with varying thresholds.
-6. Update values in `add_voters.rtm` to match the default account address, the three account addresses, the component address (see comments for locations).
-7. Execute `resim run transactions/add_voters.rtm` to add three new voters and deposit a voting badge in each of their accounts.
-8. Change to one of the voter accounts so you can cast a vote using `resim set-default-account <COMPONENT_ADDRESS><PRIVATE_KEY><OWNER_BADGE>`.
-9. Update values in `cast_vote.rtm` to match the currently selected account, the resource address of the voting badge, the `ProposalVoting` component address, and the id of the proposal to vote on.
-10. Repeat steps 8 and 9, switching between accounts/proposals so you have a variety of votes cast.
-11. Switch back to the chairperson account using `resim set-default-account <COMPONENT_ADDRESS><PRIVATE_KEY><OWNER_BADGE>`.
-12. Update values in `calculate_winning_proposals.rtm` to match the chairperson account and proposal voting component address.
-13. Execute `resim run transactions/calculate_winning_proposals.rtm` to calculate the winning proposals based on the proposals added and votes cast.
-14. Update values in `view_results.rtm` to match the chairperson account, proposal voting component address, and the desired proposal to check.
-15. Execute `resim run transactions/view_results.rtm` to view the result of the given proposal.
+- `build_run_rtm.sh`: This script will complete the full process, adding three proposals and three voters, casting a variety of votes, calculating and outputting the results. Simply run the script using `./build_run_rtm.sh`.
 
 ## Future work and improvements
 There are several improvements that could be made, here are some suggestions of features that may be added:
 - [ ] Automated Tests for all methods including edge-cases. 
-- [ ] Better setup/execution automated scripts that can auto-populate addresses in transaction manifests. 
+- [x] Better setup/execution automated scripts that can auto-populate addresses in transaction manifests. 
 - [ ] Ability to set a time-limit for how long voting is open, and automatically closing and calculating results when elapsed.
 - [ ] Bulk minting voter badges for better efficiency in situations where we need lots of participation. 
 - [ ] Bulk minting proposals, again for better efficiency. 

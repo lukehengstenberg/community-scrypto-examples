@@ -1,14 +1,14 @@
 # Locking fee to pay for transaction
 CALL_METHOD
     # default account address
-    Address("account_sim1qnx5ye2ynh4h5rms20wvuwyqp3uy2lg3gl3x3ea7tl6qknx0qf")
+    Address("<chairperson_account_address>")
     "lock_fee"
     Decimal("100");
 
 # Instantiate the ProposalVoting component with 100 votes per voter
 CALL_FUNCTION
     # ProposalVoting package address (bottom one on Packages list)
-    Address("package_sim1qq95aflyn6jvmw9ae225hyjh07w9tdupzt6xkx4s9k0sv77k5r")
+    Address("<proposalvoting_package_address>")
     "ProposalVoting"
     "instantiate_proposal_voting"
     100u16;
@@ -16,6 +16,6 @@ CALL_FUNCTION
 # Depositing everything from worktop into the account
 CALL_METHOD
     # default account address
-    Address("account_sim1qnx5ye2ynh4h5rms20wvuwyqp3uy2lg3gl3x3ea7tl6qknx0qf")
+    Address("<chairperson_account_address>")
     "deposit_batch"
     Expression("ENTIRE_WORKTOP");
