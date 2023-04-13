@@ -35,14 +35,14 @@ I am planning to add more automation to make life easier when I have time.
 
 ## Future work and improvements
 There are several improvements that could be made, here are some suggestions of features that may be added:
-- [] Automated Tests for all methods including edge-cases. 
-- [] Better setup/execution automated scripts that can auto-populate addresses in transaction manifests. 
-- [] Ability to set a time-limit for how long voting is open, and automatically closing and calculating results when elapsed.
-- [] Bulk minting voter badges for better efficiency in situations where we need lots of participation. 
-- [] Bulk minting proposals, again for better efficiency. 
-- [] Methods for chairperson to remove/recall proposals and voters as in reality proposals/voters could be dropped.
-- [] Method for bulk printing/viewing results. 
-- [] User interface which makes use of transaction manifests to interact with the `ProposalVoting` component.
-- [] More proposal metadata e.g. detailed description of what the proposal is. 
-- [] Additional transaction manifests for simulating extra scenarios like instantiation with custom access rules.
+- [ ] Automated Tests for all methods including edge-cases. 
+- [ ] Better setup/execution automated scripts that can auto-populate addresses in transaction manifests. 
+- [ ] Ability to set a time-limit for how long voting is open, and automatically closing and calculating results when elapsed.
+- [ ] Bulk minting voter badges for better efficiency in situations where we need lots of participation. 
+- [ ] Bulk minting proposals, again for better efficiency. 
+- [ ] Methods for chairperson to remove/recall proposals and voters as in reality proposals/voters could be dropped.
+- [ ] Method for bulk printing/viewing results. 
+- [ ] User interface which makes use of transaction manifests to interact with the `ProposalVoting` component.
+- [ ] More proposal metadata e.g. detailed description of what the proposal is. 
+- [ ] Additional transaction manifests for simulating extra scenarios like instantiation with custom access rules.
 
