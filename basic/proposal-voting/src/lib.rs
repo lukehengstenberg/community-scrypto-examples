@@ -477,5 +477,21 @@ mod proposal_voting_module {
                     minimum threshold of {}%", proposal_data.name, proposal_data.threshold);
             }
         }
+
+        /// Logs the result of all proposals.
+        /// 
+        /// This method can be accessed by anyone to check the results of all
+        /// proposals. The method iterates and calls check_winner for each id.
+        /// (see manifest in transactions/view_results.rtm)
+        pub fn check_results(
+            &mut self,
+        ) {
+            info!("Checking the results for all proposals...");
+
+            // Loop through all proposal ids to check and print the result one at a time.
+            for proposal_id in self.proposals.non_fungible_local_ids() {
+                self.check_winner(proposal_id);
+            }
+        }
     }
 }

@@ -41,7 +41,7 @@ There are several improvements that could be made, here are some suggestions of 
 - [ ] Bulk minting voter badges for better efficiency in situations where we need lots of participation. 
 - [ ] Bulk minting proposals, again for better efficiency. 
 - [ ] Methods for chairperson to remove/recall proposals and voters as in reality proposals/voters could be dropped.
-- [ ] Method for bulk printing/viewing results. 
+- [x] Method for bulk printing/viewing results. 
 - [ ] User interface which makes use of transaction manifests to interact with the `ProposalVoting` component.
 - [ ] More proposal metadata e.g. detailed description of what the proposal is. 
 - [ ] Additional transaction manifests for simulating extra scenarios like instantiation with custom access rules.
